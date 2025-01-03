@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	mkr *proxyKeyring
+	pkr *proxyKeyring
 )
 
 func check(err error) {
@@ -38,7 +38,7 @@ func cleanup(fp *os.File) {
 func handler(conn net.Conn) {
 	slog.Info("client accepted")
 
-	if err := agent.ServeAgent(mkr, conn); err != nil && !errors.Is(err, io.EOF) {
+	if err := agent.ServeAgent(pkr, conn); err != nil && !errors.Is(err, io.EOF) {
 		slog.Error("serve agent", "error", err)
 	}
 
@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mkr = NewProxyKeyring(os.Args[1:])
+	pkr = NewProxyKeyring(os.Args[1:])
 
 	fp, err := os.CreateTemp(os.TempDir(), "multi-ssh-agent-*")
 	check(err)
@@ -59,7 +59,7 @@ func main() {
 	name := fp.Name()
 	cleanup(fp)
 
-	slog.Info("starting", "SSH_AUTH_SOCK", name, "sockets", mkr.sockets)
+	slog.Info("starting", "SSH_AUTH_SOCK", name, "sockets", pkr.sockets)
 
 	socket, err := net.Listen("unix", name)
 	check(err)
