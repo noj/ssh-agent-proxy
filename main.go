@@ -65,13 +65,10 @@ func main() {
 	check(err)
 
 	for {
-		// Accept an incoming connection.
-		conn, err := socket.Accept()
-		if err != nil {
+		if conn, err := socket.Accept(); err != nil {
 			slog.Error("accept", "error", err)
-			continue
+		} else {
+			go handler(conn)
 		}
-
-		go handler(conn)
 	}
 }
