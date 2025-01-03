@@ -18,7 +18,7 @@ type (
 	}
 )
 
-// Returns a new proxy key ring, safe to used by multiple goroutines.
+// Returns a new proxy key ring, safe to use by multiple goroutines.
 func NewProxyKeyring(sockets []string) *proxyKeyring {
 	return &proxyKeyring{
 		sockets: sockets,
