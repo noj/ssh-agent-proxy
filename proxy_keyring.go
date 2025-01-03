@@ -25,8 +25,12 @@ func NewProxyKeyring(sockets []string) *proxyKeyring {
 	}
 }
 
+// Iterates over all agents in a thread-safe manner
 func (r *proxyKeyring) agents() iter.Seq[agent.ExtendedAgent] {
 	return func(yield func(agent.ExtendedAgent) bool) {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+
 		for _, socket := range r.sockets {
 			conn, err := net.Dial("unix", socket)
 			if err != nil {
@@ -45,9 +49,6 @@ func (r *proxyKeyring) agents() iter.Seq[agent.ExtendedAgent] {
 
 // RemoveAll removes all identities.
 func (r *proxyKeyring) RemoveAll() error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if err := a.RemoveAll(); err != nil {
 			slog.Error("remove all", "error", err)
@@ -59,9 +60,6 @@ func (r *proxyKeyring) RemoveAll() error {
 
 // Remove removes all identities with the given public key.
 func (r *proxyKeyring) Remove(key ssh.PublicKey) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if err := a.Remove(key); err != nil {
 			slog.Error("remove", "error", err)
@@ -73,9 +71,6 @@ func (r *proxyKeyring) Remove(key ssh.PublicKey) error {
 
 // Lock locks the agent. Sign and Remove will fail, and List will return an empty list.
 func (r *proxyKeyring) Lock(passphrase []byte) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if err := a.Lock(passphrase); err != nil {
 			slog.Error("lock", "error", err)
@@ -86,9 +81,6 @@ func (r *proxyKeyring) Lock(passphrase []byte) error {
 }
 
 func (r *proxyKeyring) Unlock(passphrase []byte) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if err := a.Unlock(passphrase); err != nil {
 			slog.Error("unlock", "error", err)
@@ -101,9 +93,6 @@ func (r *proxyKeyring) Unlock(passphrase []byte) error {
 // List returns the identities known to the agent.
 func (r *proxyKeyring) List() ([]*agent.Key, error) {
 	var merged []*agent.Key
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	for a := range r.agents() {
 		if res, err := a.List(); err != nil {
@@ -121,9 +110,6 @@ func (r *proxyKeyring) List() ([]*agent.Key, error) {
 // is given, that certificate is added as public key. Note that
 // any constraints given are ignored.
 func (r *proxyKeyring) Add(key agent.AddedKey) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if err := a.Add(key); err != nil {
 			slog.Error("error adding", "error", err)
@@ -140,10 +126,6 @@ func (r *proxyKeyring) Add(key agent.AddedKey) error {
 
 // Sign returns a signature for the data.
 func (r *proxyKeyring) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) {
-	slog.Debug("sign", "type", key.Type())
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for a := range r.agents() {
 		if sig, err := a.Sign(key, data); err != nil {
 			slog.Error("sign failed", "error", err)
@@ -158,9 +140,6 @@ func (r *proxyKeyring) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, err
 // Signers returns signers for all the known keys.
 func (r *proxyKeyring) Signers() ([]ssh.Signer, error) {
 	var merged []ssh.Signer
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
 
 	for a := range r.agents() {
 		if res, err := a.Signers(); err != nil {
