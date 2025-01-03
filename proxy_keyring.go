@@ -97,7 +97,6 @@ func (r *proxyKeyring) List() ([]*agent.Key, error) {
 	for a := range r.agents() {
 		if res, err := a.List(); err != nil {
 			slog.Error("error listing", "error", err)
-			continue
 		} else {
 			merged = slices.Concat(merged, res)
 		}
@@ -113,7 +112,6 @@ func (r *proxyKeyring) Add(key agent.AddedKey) error {
 	for a := range r.agents() {
 		if err := a.Add(key); err != nil {
 			slog.Error("error adding", "error", err)
-			continue
 		} else {
 			// First add that succeeds is enough
 			slog.Debug("key added", "comment", key.Comment)
@@ -144,7 +142,6 @@ func (r *proxyKeyring) Signers() ([]ssh.Signer, error) {
 	for a := range r.agents() {
 		if res, err := a.Signers(); err != nil {
 			slog.Error("signers", "error", err)
-			continue
 		} else {
 			merged = slices.Concat(merged, res)
 		}
