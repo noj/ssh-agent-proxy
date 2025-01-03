@@ -53,7 +53,7 @@ func main() {
 
 	pkr = NewProxyKeyring(os.Args[1:])
 
-	fp, err := os.CreateTemp(os.TempDir(), "multi-ssh-agent-*")
+	fp, err := os.CreateTemp(os.TempDir(), "ssh-agent-proxy-*")
 	check(err)
 
 	name := fp.Name()
