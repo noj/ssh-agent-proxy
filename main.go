@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mkr = NewMultiKeyring(os.Args[1:])
+	mkr = NewProxyKeyring(os.Args[1:])
 
 	fp, err := os.CreateTemp(os.TempDir(), "multi-ssh-agent-*")
 	check(err)
